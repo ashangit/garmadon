@@ -18,6 +18,7 @@ message Header {
     optional string executor_id = 11;
     repeated string tags = 12;
     optional string id = 13;
+    optional string main_class = 14;
 }
 
 message PathEvent {
