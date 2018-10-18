@@ -7,7 +7,7 @@ services:
     hostname: client
     restart: always
     environment:
-      JAVA_TOOL_OPTIONS: -javaagent:/opt/garmadon/lib/garmadon-agent-${GARMADON_RELEASE}-uber.jar=com.criteo.hadoop.garmadon.agent.modules.StandaloneModule
+      JAVA_TOOL_OPTIONS: -javaagent:/opt/garmadon/lib/garmadon-agent.jar=com.criteo.hadoop.garmadon.agent.modules.StandaloneModule
     command:
       - /usr/bin/entrypoint.sh
       - client

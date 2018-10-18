@@ -11,7 +11,22 @@
     <packaging>pom</packaging>
 
     <name>garmadon</name>
-    <description>Template for java program to be build by the jmoab</description>
+    <description>Garmadon is a java event logs collector for hadoop and frameworks</description>
+    <url>https://github.com/criteo/garmadon</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:github.com/criteo/garmadon.git</connection>
+        <developerConnection>scm:git:git@github.com:criteo/garmadon.git</developerConnection>
+        <url>github.com/criteo/garmadon</url>
+    </scm>
 
     <modules>
         <module>schema</module>
@@ -28,12 +43,11 @@
         <name>Criteo</name>
     </organization>
 
-
     <repositories>
-       <repository>
-          <id>cloudera</id>
-          <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
-       </repository>
+        <repository>
+            <id>cloudera</id>
+            <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+        </repository>
     </repositories>
 
     <properties>
@@ -56,7 +70,6 @@
         <junit.version>4.12</junit.version>
         <mockito.version>1.10.19</mockito.version>
     </properties>
-
 
     <dependencies>
         <!-- Test dependencies -->
@@ -103,8 +116,6 @@
                     <environmentVariables>
                         <USER>userprobes</USER>
                         <NM_HOST>hostname</NM_HOST>
-                        <CRITEO_DC>pa4</CRITEO_DC>
-                        <CRITEO_ENV>preprod</CRITEO_ENV>
                     </environmentVariables>
                 </configuration>
             </plugin>
