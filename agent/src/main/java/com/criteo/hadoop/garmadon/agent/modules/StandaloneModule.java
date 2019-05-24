@@ -24,6 +24,8 @@ public class StandaloneModule implements GarmadonAgentModule {
         // Byte code instrumentation
         executorService.submit(() -> FileSystemTracer.setup(instrumentation,
             (timestamp, event) -> eventProcessor.offer(timestamp, StandaloneHeader.getInstance().getHeader(), event)));
+        //executorService.submit(() -> AbstractFileSystemTracer.setup(instrumentation,
+        //    (timestamp, event) -> eventProcessor.offer(timestamp, StandaloneHeader.getInstance().getHeader(), event)));
 
         // Set SPARK Listener
         executorService.submit(() -> {

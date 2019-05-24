@@ -16,7 +16,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.net.InetSocketAddress;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
@@ -24,7 +23,7 @@ import java.util.function.BiConsumer;
 import static net.bytebuddy.implementation.MethodDelegation.to;
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
-public class FileSystemTracer {
+public class AbstractFileSystemTracer {
     private static final long NANOSECONDS_PER_MILLISECOND = 1000000;
     private static final ConcurrentHashMap METHOD_CACHE = new ConcurrentHashMap<Object, Method>();
     private static final ConcurrentHashMap FIELD_CACHE = new ConcurrentHashMap<ClassLoader, Field>();
@@ -33,7 +32,7 @@ public class FileSystemTracer {
     private static TypeDescription pathTD =
         new TypeDescription.Latent("org.apache.hadoop.fs.Path", Opcodes.ACC_PUBLIC, TypeDescription.Generic.OBJECT);
 
-    protected FileSystemTracer() {
+    protected AbstractFileSystemTracer() {
         throw new UnsupportedOperationException();
     }
 
@@ -41,14 +40,11 @@ public class FileSystemTracer {
 
         initEventHandler(eventConsumer);
 
-        new FileSystemTracer.ReadTracer().installOn(instrumentation);
-        new FileSystemTracer.WriteTracer().installOn(instrumentation);
-        new FileSystemTracer.RenameTracer().installOn(instrumentation);
-        new FileSystemTracer.DeleteTracer().installOn(instrumentation);
-        new FileSystemTracer.AppendTracer().installOn(instrumentation);
-        new FileSystemTracer.ListStatusTracer().installOn(instrumentation);
-        new FileSystemTracer.GetContentSummaryTracer().installOn(instrumentation);
-        new FileSystemTracer.AddBlockTracer().installOn(instrumentation);
+        new AbstractFileSystemTracer.ReadTracer().installOn(instrumentation);
+        new AbstractFileSystemTracer.WriteTracer().installOn(instrumentation);
+        new AbstractFileSystemTracer.RenameTracer().installOn(instrumentation);
+        new AbstractFileSystemTracer.DeleteTracer().installOn(instrumentation);
+        new AbstractFileSystemTracer.ListStatusTracer().installOn(instrumentation);
     }
 
     public static ConcurrentHashMap getFieldCache() {
@@ -85,7 +81,7 @@ public class FileSystemTracer {
     }
 
     public static void initEventHandler(BiConsumer<Long, Object> eventConsumer) {
-        FileSystemTracer.eventHandler = eventConsumer;
+        AbstractFileSystemTracer.eventHandler = eventConsumer;
     }
 
     public static class DeleteTracer extends MethodTracer {
@@ -93,7 +89,7 @@ public class FileSystemTracer {
 
         @Override
         protected ElementMatcher<? super TypeDescription> typeMatcher() {
-            return nameStartsWith("org.apache.hadoop.hdfs.DistributedFileSystem").or(nameStartsWith("org.apache.hadoop.fs.Hdfs"));
+            return nameStartsWith("org.apache.hadoop.fs.Hdfs");
         }
 
         @Override
@@ -103,7 +99,7 @@ public class FileSystemTracer {
 
         @Override
         protected Implementation newImplementation() {
-            return to(FileSystemTracer.DeleteTracer.class);
+            return to(AbstractFileSystemTracer.DeleteTracer.class);
         }
 
         @RuntimeType
@@ -118,7 +114,7 @@ public class FileSystemTracer {
     public static class ReadTracer extends MethodTracer {
         @Override
         protected ElementMatcher<? super TypeDescription> typeMatcher() {
-            return nameStartsWith("org.apache.hadoop.hdfs.DistributedFileSystem").or(nameStartsWith("org.apache.hadoop.fs.Hdfs"));
+            return nameStartsWith("org.apache.hadoop.fs.Hdfs");
         }
 
         @Override
@@ -128,7 +124,7 @@ public class FileSystemTracer {
 
         @Override
         protected Implementation newImplementation() {
-            return to(FileSystemTracer.ReadTracer.class);
+            return to(AbstractFileSystemTracer.ReadTracer.class);
         }
 
         @RuntimeType
@@ -143,17 +139,17 @@ public class FileSystemTracer {
     public static class RenameTracer extends MethodTracer {
         @Override
         protected ElementMatcher<? super TypeDescription> typeMatcher() {
-            return nameStartsWith("org.apache.hadoop.hdfs.DistributedFileSystem").or(nameStartsWith("org.apache.hadoop.fs.Hdfs"));
+            return nameStartsWith("org.apache.hadoop.fs.Hdfs");
         }
 
         @Override
         protected ElementMatcher<? super MethodDescription> methodMatcher() {
-            return named("rename").or(named("renameInternal"));
+            return named("renameInternal");
         }
 
         @Override
         protected Implementation newImplementation() {
-            return to(FileSystemTracer.RenameTracer.class);
+            return to(AbstractFileSystemTracer.RenameTracer.class);
         }
 
         @RuntimeType
@@ -169,18 +165,17 @@ public class FileSystemTracer {
     public static class WriteTracer extends MethodTracer {
         @Override
         protected ElementMatcher<? super TypeDescription> typeMatcher() {
-            return nameStartsWith("org.apache.hadoop.hdfs.DistributedFileSystem").or(nameStartsWith("org.apache.hadoop.fs.Hdfs"));
+            return nameStartsWith("org.apache.hadoop.fs.Hdfs");
         }
 
         @Override
         protected ElementMatcher<? super MethodDescription> methodMatcher() {
-            return named("create").and(takesArguments(7)).and(takesArgument(0, pathTD))
-                .or(named("createInternal"));
+            return named("createInternal").and(takesArguments(7)).and(takesArgument(0, pathTD));
         }
 
         @Override
         protected Implementation newImplementation() {
-            return to(FileSystemTracer.WriteTracer.class);
+            return to(AbstractFileSystemTracer.WriteTracer.class);
         }
 
         @RuntimeType
@@ -192,35 +187,10 @@ public class FileSystemTracer {
         }
     }
 
-    public static class AppendTracer extends MethodTracer {
-        @Override
-        protected ElementMatcher<? super TypeDescription> typeMatcher() {
-            return nameStartsWith("org.apache.hadoop.hdfs.DistributedFileSystem");
-        }
-
-        @Override
-        protected ElementMatcher<? super MethodDescription> methodMatcher() {
-            return named("append").and(takesArgument(0, pathTD));
-        }
-
-        @Override
-        protected Implementation newImplementation() {
-            return to(FileSystemTracer.AppendTracer.class);
-        }
-
-        @RuntimeType
-        public static Object intercept(
-            @SuperCall Callable<?> zuper,
-            @This Object o,
-            @Argument(0) Object dst) throws Exception {
-            return callDistributedFileSystem(zuper, o, null, dst.toString(), FsAction.APPEND.name());
-        }
-    }
-
     public static class ListStatusTracer extends MethodTracer {
         @Override
         protected ElementMatcher<? super TypeDescription> typeMatcher() {
-            return nameStartsWith("org.apache.hadoop.hdfs.DistributedFileSystem").or(nameStartsWith("org.apache.hadoop.fs.Hdfs"));
+            return nameStartsWith("org.apache.hadoop.fs.Hdfs");
         }
 
         @Override
@@ -232,7 +202,7 @@ public class FileSystemTracer {
 
         @Override
         protected Implementation newImplementation() {
-            return to(FileSystemTracer.ListStatusTracer.class);
+            return to(AbstractFileSystemTracer.ListStatusTracer.class);
         }
 
         @RuntimeType
@@ -244,72 +214,14 @@ public class FileSystemTracer {
         }
     }
 
-    public static class GetContentSummaryTracer extends MethodTracer {
-        @Override
-        protected ElementMatcher<? super TypeDescription> typeMatcher() {
-            return nameStartsWith("org.apache.hadoop.hdfs.DistributedFileSystem");
-        }
-
-        @Override
-        protected ElementMatcher<? super MethodDescription> methodMatcher() {
-            return named("getContentSummary").and(takesArgument(0, pathTD));
-        }
-
-        @Override
-        protected Implementation newImplementation() {
-            return to(FileSystemTracer.GetContentSummaryTracer.class);
-        }
-
-        @RuntimeType
-        public static Object intercept(
-            @SuperCall Callable<?> zuper,
-            @This Object o,
-            @Argument(0) Object dst) throws Exception {
-            return callDistributedFileSystem(zuper, o, null, dst.toString(), FsAction.GET_CONTENT_SUMMARY.name());
-        }
-    }
-
-    public static class AddBlockTracer extends MethodTracer {
-        @Override
-        public ElementMatcher<? super TypeDescription> typeMatcher() {
-            return nameStartsWith("org.apache.hadoop.hdfs.protocolPB.ClientNamenodeProtocolTranslatorPB");
-        }
-
-        @Override
-        protected ElementMatcher<? super MethodDescription> methodMatcher() {
-            return named("addBlock").and(takesArgument(0, String.class));
-        }
-
-        @Override
-        protected Implementation newImplementation() {
-            return to(FileSystemTracer.AddBlockTracer.class);
-        }
-
-        @RuntimeType
-        public static Object intercept(
-            @SuperCall Callable<?> zuper,
-            @This Object o,
-            @Argument(0) String dst) throws Exception {
-
-            ClassLoader classLoader = o.getClass().getClassLoader();
-            Field field = getField(classLoader, "org.apache.hadoop.hdfs.protocolPB.ClientNamenodeProtocolTranslatorPB", "rpcProxy");
-            Object rpcProxy = field.get(o);
-
-            Method getServerAddress = getMethod(classLoader, "org.apache.hadoop.ipc.RPC", "getServerAddress", Object.class);
-            InetSocketAddress inetSocketAddress = (InetSocketAddress) getServerAddress.invoke(o, rpcProxy);
-            return executeMethod(zuper, "hdfs://" + inetSocketAddress.getHostString() + ":" + inetSocketAddress.getPort(),
-                null, dst, FsAction.ADD_BLOCK.name(), null);
-        }
-    }
-
     private static Object callDistributedFileSystem(@SuperCall Callable<?> zuper, @This Object o, String src, String dst, String fsAction) throws Exception {
         ClassLoader classLoader = o.getClass().getClassLoader();
-        Field dfsField = getField(classLoader, o.getClass().getName(), "dfs");
+        Field dfsField = getField(classLoader, "org.apache.hadoop.fs.Hdfs", "dfs");
         Object dfs = dfsField.get(o);
         Field ugiField = getField(classLoader, "org.apache.hadoop.hdfs.DFSClient", "ugi");
         Object ugi = ugiField.get(dfs);
         Method getShortUserName = getMethod(classLoader, "org.apache.hadoop.security.UserGroupInformation", "getShortUserName");
-        Method getUri = getMethod(classLoader, o.getClass().getName(), "getUri");
+        Method getUri = getMethod(classLoader, "org.apache.hadoop.fs.Hdfs", "getUri");
         return executeMethod(zuper, getUri.invoke(o).toString(), src, dst, fsAction, (String) getShortUserName.invoke(ugi));
     }
 
