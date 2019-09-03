@@ -54,7 +54,7 @@ RUN wget https://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/spark-${SP
     rm -f spark-${SPARK_VERSION}-bin-hadoop2.6.tgz
 
 # Download and unzip flink
-RUN wget http://apache.mediamirrors.org/flink/flink-${FLINK_VERSION}/flink-${FLINK_VERSION}-bin-hadoop26-scala_2.11.tgz && \
+RUN wget http://apache.crihan.fr/dist/flink/flink-${FLINK_VERSION}/flink-${FLINK_VERSION}-bin-hadoop26-scala_2.11.tgz && \
     tar xvfz flink-${FLINK_VERSION}-bin-hadoop26-scala_2.11.tgz -C /opt && \
     ln -s /opt/flink-${FLINK_VERSION} /opt/flink && \
     rm -f flink-${FLINK_VERSION}-bin-hadoop26-scala_2.11.tgz
