@@ -8,7 +8,8 @@
         </encoder>
     </appender>
 
-    <root level="info">
+    <root level="WARN">
         <appender-ref ref="stdout" />
     </root>
+    <logger name="com.criteo.hadoop.garmadon" level="INFO"/>
 </configuration>
