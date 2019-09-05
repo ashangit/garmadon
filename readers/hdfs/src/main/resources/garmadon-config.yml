@@ -1,0 +1,13 @@
+hdfs:
+  baseTemporaryDir: /tmp/nfraison/hdfs-exporter/temp
+  finalDir: /tmp/nfraison/hdfs-exporter/final
+  messagesBeforeExpiringWriters: 500
+  writersExpirationDelay: 1
+  expirerPeriod: 1
+  sizeBeforeFlushingTmp: 1
+kafka:
+  settings:
+    bootstrap.servers: kafka-discovery-stream01-par.hpc.criteo.preprod:9092,kafka-discovery-stream02-par.hpc.criteo.preprod:9092,kafka-discovery-stream03-par.hpc.criteo.preprod:9092,kafka-discovery-stream04-par.hpc.criteo.preprod:9092,kafka-discovery-stream05-par.hpc.criteo.preprod:9092
+    group.id: hdfs-reader-nico
+prometheus:
+  port: 31001
