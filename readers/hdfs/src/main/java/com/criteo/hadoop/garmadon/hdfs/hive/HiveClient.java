@@ -95,6 +95,7 @@ public class HiveClient {
 
     public void createPartitionIfNotExist(String table, MessageType schema, String partition, String location) throws SQLException {
         createTableIfNotExist(table, schema, location);
+        updateTableSchema(table, schema, location);
 
         String partitionCreation = "ALTER TABLE "
             + database + "." + table
@@ -103,6 +104,24 @@ public class HiveClient {
         LOGGER.info("Create partition day={} on {} if not exists", partition, table);
         LOGGER.debug("Execute hql: {}", partitionCreation);
         execute(partitionCreation);
+    }
+
+    protected void updateTableSchema(String table, MessageType schema, String location) throws SQLException {
+        String hiveSchema = schema.getFields().stream().map(field -> {
+            try {
+                return field.getName() + " " + inferHiveType(field);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }).collect(Collectors.joining(", "));
+
+        String alterTable = "ALTER TABLE "
+            + database + "." + table
+            + " REPLACE COLUMNS"
+            + "(" + hiveSchema + ")";
+        LOGGER.info("Update schema on table {}", table);
+        LOGGER.debug("Execute hql: {}", alterTable);
+        execute(alterTable);
     }
 
     protected String inferHiveType(Type field) throws Exception {

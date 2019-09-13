@@ -18,7 +18,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 public class HiveClientTest {
@@ -112,6 +113,44 @@ public class HiveClientTest {
         HiveClient hiveClient = new HiveClient(driverName, "jdbc:hive2://localhost:" + port, "garmadon",
             hdfsTemp + "/garmadon_database");
         hiveClient.createTableIfNotExist(table, schema, location);
+    }
+
+    @Test
+    public void createPartitionWithoutIssueAndAlterTableIfNeeded() throws SQLException {
+        String partition = "2018-09-09";
+        PrimitiveType appId = new PrimitiveType(Type.Repetition.OPTIONAL, PrimitiveType.PrimitiveTypeName.BINARY, "app_id");
+
+        MessageType schema = new MessageType("fs", appId);
+
+        String table = "fs";
+        String location = "file:" + hdfsTemp + "/garmadon_database/fs";
+        HiveClient hiveClient = spy(new HiveClient(driverName, "jdbc:hive2://localhost:" + port, "garmadon",
+            hdfsTemp + "/garmadon_database"));
+        hiveClient.createPartitionIfNotExist(table, schema, partition, location);
+
+        HashMap<String, String> result = getResultHashTableDesc(hiveClient, table);
+        assertEquals("string", result.get("day"));
+        assertEquals("string", result.get("app_id"));
+
+        ResultSet rset = hiveClient.getStmt().executeQuery("SHOW PARTITIONS " + database + "." + table + " PARTITION(day='" + partition + "')");
+        rset.last();
+        assertEquals(1, rset.getRow());
+        rset.close();
+        rset = hiveClient.getStmt().executeQuery("SHOW PARTITIONS " + database + "." + table + " PARTITION(day='not_a_created_partition')");
+        rset.last();
+        assertEquals(0, rset.getRow());
+        rset.close();
+
+        PrimitiveType user = new PrimitiveType(Type.Repetition.OPTIONAL, PrimitiveType.PrimitiveTypeName.BINARY, "user");
+        PrimitiveType nbFile = new PrimitiveType(Type.Repetition.OPTIONAL, PrimitiveType.PrimitiveTypeName.INT32, "nb_file");
+        schema = new MessageType("fs", appId, user, nbFile);
+        hiveClient.createPartitionIfNotExist(table, schema, partition, location);
+
+        result = getResultHashTableDesc(hiveClient, table);
+        assertEquals("string", result.get("day"));
+        assertEquals("string", result.get("app_id"));
+        assertEquals("string", result.get("user"));
+        assertEquals("int", result.get("nb_file"));
     }
 
     @Test
