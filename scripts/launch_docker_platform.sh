@@ -35,7 +35,7 @@ curl 'http://localhost:5601/api/saved_objects/index-pattern' -H 'Content-Type: a
 
 # Create garmadon Grafana Datasource
 block_until_website_available 'http://localhost:3000'
-curl -u admin:secret -XPOST 'http://localhost:3000/api/datasources' -H 'Content-Type: application/json' -d '{"name":"garmadon","isDefault":false,"type":"elasticsearch","url":"http://elasticsearch:9200","access":"proxy","jsonData":{"keepCookies":[],"timeField":"timestamp","esVersion":56,"maxConcurrentShardRequests":256,"interval":"Hourly"},"secureJsonFields":{},"database":"[garmadon-]YYYY-MM-DD-HH"}'
+curl -u admin:secret -XPOST 'http://localhost:3000/api/datasources' -H 'Content-Type: application/json' -d '{"name":"garmadon","isDefault":false,"type":"elasticsearch","url":"http://elasticsearch:9200","access":"proxy","jsonData":{"keepCookies":[],"timeField":"timestamp","esVersion":70,"interval":"Hourly"},"secureJsonFields":{},"database":"[garmadon-]YYYY-MM-DD-HH"}'
 
 # Import garmadon dashboards
 curl -u admin:secret -XPOST 'http://localhost:3000/api/dashboards/import' -H 'Content-Type: application/json' -d @${ES_FOLDER}/grafana/garmadon-server-overview.json

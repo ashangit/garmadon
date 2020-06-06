@@ -25,7 +25,6 @@ import org.elasticsearch.action.bulk.BackoffPolicy;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.*;
 import org.elasticsearch.client.sniff.SniffOnFailureListener;
 import org.elasticsearch.client.sniff.Sniffer;
@@ -135,9 +134,8 @@ public final class ElasticSearchReader {
         elasticSearchCacheManager.enrichEvent(eventMap);
 
         String dailyIndex = esIndexPrefix + "-" + FORMATTER.format(timestampMillis);
-        IndexRequest req = new IndexRequest(dailyIndex, ES_TYPE)
-            .source(eventMap);
-        bulkProcessor.add(req, committableOffset);
+        GarmadonIndexRequest req = new GarmadonIndexRequest(dailyIndex, committableOffset).source(eventMap);
+        bulkProcessor.add(req);
     }
 
     private static class LogFailureListener extends SniffOnFailureListener {
@@ -201,8 +199,7 @@ public final class ElasticSearchReader {
             .setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder
                 .setConnectTimeout(CONNECTION_TIMEOUT_MS)
                 .setSocketTimeout(SOCKET_TIMEOUT_MS)
-                .setContentCompressionEnabled(true))
-            .setMaxRetryTimeoutMillis(2 * SOCKET_TIMEOUT_MS);
+                .setContentCompressionEnabled(true));
 
         if (elasticsearch.getUser() != null) {
             credentialsProvider.setCredentials(AuthScope.ANY,

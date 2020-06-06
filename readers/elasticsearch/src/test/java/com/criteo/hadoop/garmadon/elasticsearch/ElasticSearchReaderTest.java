@@ -105,7 +105,7 @@ public class ElasticSearchReaderTest {
         eventMap.put("state", state);
 
         writeGarmadonMessage(type, event, 0L);
-        verify(bulkProcessor, times(1)).add(argument.capture(), any(CommittableOffset.class));
+        verify(bulkProcessor, times(1)).add(argument.capture());
 
         assertEquals(eventMap, argument.getValue().sourceAsMap());
     }
@@ -138,7 +138,7 @@ public class ElasticSearchReaderTest {
         eventMap.put("start_time", 0);
 
         writeGarmadonMessage(type, event, 0L);
-        verify(bulkProcessor, times(1)).add(argument.capture(), any(CommittableOffset.class));
+        verify(bulkProcessor, times(1)).add(argument.capture());
 
         assertEquals(eventMap, argument.getValue().sourceAsMap());
     }
@@ -190,7 +190,7 @@ public class ElasticSearchReaderTest {
         dsikEventMap.put("tx", 10.0);
 
         writeGarmadonMessage(type, event, 0L);
-        verify(bulkProcessor, times(2)).add(argument.capture(), any(CommittableOffset.class));
+        verify(bulkProcessor, times(2)).add(argument.capture());
 
         Map<String, Object> diskMap = null;
         Map<String, Object> jvmMap = null;
@@ -229,7 +229,7 @@ public class ElasticSearchReaderTest {
         eventMap.put("status", "UNKNOWN");
 
         writeGarmadonMessage(type, event, 0L);
-        verify(bulkProcessor, times(1)).add(argument.capture(), any(CommittableOffset.class));
+        verify(bulkProcessor, times(1)).add(argument.capture());
 
         assertEquals(eventMap, argument.getValue().sourceAsMap());
     }
